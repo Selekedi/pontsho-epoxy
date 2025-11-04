@@ -11,6 +11,8 @@ const today = new Date()
 
 copyrightTag.textContent = `© ${today.getFullYear()} Pholosho Epoxy Coating. All rights reserved.`
 
+window.addEventListener("DOMContentLoaded", handleInitialHashScroll);
+
 window.addEventListener('resize', throttle(() => {
     if(window.innerWidth >= 810 && navBar.getBoundingClientRect().height >= 100){ 
       navBar.style.height = navList.getBoundingClientRect().height + "px"
@@ -44,6 +46,43 @@ navLinks.forEach(link => {
   })
 })
 
+const observer = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      // Update the hash without scrolling the page
+      pushToHistory(id)
+    }
+  }
+}, {
+  root: null,                // Observe viewport
+  threshold: 0.6,            // Section must be 60% visible
+  rootMargin: "0px 0px -30% 0px" // Adjust for fixed header
+});
+
+sections.forEach(section => observer.observe(section));
+
+function handleInitialHashScroll() {
+  const hash = window.location.hash;
+  if (!hash) return;
+
+  const target = document.querySelector(hash);
+  if (!target) return;
+
+  // Temporarily remove the id to stop browser scroll
+  target.id = "";
+
+  // Wait for page layout to settle
+  requestAnimationFrame(() => {
+    // Restore the id
+    target.id = hash.substring(1);
+
+    // Now scroll using your custom logic
+    navigateById(target);
+  });
+}
+
+
 function navigateById(id){
   const element = document.getElementById(id)
     const headerHeight = header.getBoundingClientRect().height
@@ -51,6 +90,10 @@ function navigateById(id){
       left:0,
       top: element.offsetTop - headerHeight
     })   
+}
+
+function pushToHistory(id){
+  history.replaceState(null, "", "#" + id);
 }
 
 function throttle(func, limit) {
